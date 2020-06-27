@@ -15,6 +15,11 @@ jobs:
 
     steps:
 
+    - name: Checkout Branch To Make Edits
+      uses: actions/checkout@master
+      with:
+        ref: auto-rails-new
+
     - name: Set up Ruby
     # To automatically get bug fixes and new Ruby versions for ruby/setup-ruby,
     # change this to (see https://github.com/ruby/setup-ruby#versioning):
@@ -24,8 +29,7 @@ jobs:
         ruby-version: 2.6
 
     - name: Install dependencies
-      run: bundle install && sudo apt-get install -y libsqlite3-dev
-
+      run: bundle init && bundle install rails && sudo apt-get install -y libsqlite3-dev
 
     - name: Create A New Branch
       uses: peterjgrainger/action-create-branch@v1.0.0
@@ -33,11 +37,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         branch: auto-rails-new
-
-    - name: Checkout Branch Make Edits
-      uses: actions/checkout@master
-      with:
-        ref: auto-rails-new
 
     - name: Rails New
       run: rails new myapp --api
