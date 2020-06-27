@@ -28,7 +28,7 @@ jobs:
       run: rails new myapp --api
     - name: Create Pull Request
       id: cpr
-      uses: peter-evans/create-pull-request@v1
+      uses: peter-evans/create-pull-request@v2.8.1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         commit-message: Auto-generated `rails new <app> --api`
