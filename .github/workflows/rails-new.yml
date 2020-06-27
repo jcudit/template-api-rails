@@ -1,0 +1,50 @@
+# This workflow will download a prebuilt Ruby version and install dependencies
+
+name: Rails New
+
+on:
+  push:
+    branches: [ development ]
+  pull_request:
+    branches: [ development ]
+
+jobs:
+  rails-new:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout Branch To Make Edits
+      uses: actions/checkout@v2
+
+    - name: Set up Ruby
+    # To automatically get bug fixes and new Ruby versions for ruby/setup-ruby,
+    # change this to (see https://github.com/ruby/setup-ruby#versioning):
+    # uses: ruby/setup-ruby@v1
+      uses: ruby/setup-ruby@ec106b438a1ff6ff109590de34ddc62c540232e0
+      with:
+        ruby-version: 2.6
+
+    - name: Install dependencies
+      run: bundle init && bundle add rails && sudo apt-get install -y libsqlite3-dev
+
+    - name: Rails New
+      run: rails new . --skip --api
+
+    - name: Debug Context
+      run: |
+        jq -rc '.' $GITHUB_EVENT_PATH
+
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v2.8.1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: Auto-generated `rails new <app> --api`
+        author-email: hubot@github.com
+        author-name: Hubot
+        title: Scaffold Rails API App
+        body: Auto-generated `rails new <app> --api`
+        base: development
+        branch: auto-rails-new
+        branch-suffix: random
