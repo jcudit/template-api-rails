@@ -50,5 +50,5 @@ jobs:
         author-name: Hubot
         title: Scaffold Rails API App
         body: Auto-generated `rails new <app> --api`
-        branch: auto-rails-new
+        branch: auto-rails-new-test
         branch-suffix: none
