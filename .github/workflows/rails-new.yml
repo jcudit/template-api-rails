@@ -15,17 +15,8 @@ jobs:
 
     steps:
 
-    - name: Create A New Branch
-      uses: peterjgrainger/action-create-branch@v1.0.0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        branch: auto-rails-new
-
     - name: Checkout Branch To Make Edits
-      uses: actions/checkout@master
-      with:
-        ref: auto-rails-new
+      uses: actions/checkout@v2
 
     - name: Set up Ruby
     # To automatically get bug fixes and new Ruby versions for ruby/setup-ruby,
@@ -50,5 +41,5 @@ jobs:
         author-name: Hubot
         title: Scaffold Rails API App
         body: Auto-generated `rails new <app> --api`
-        branch: auto-rails-new-test
-        branch-suffix: none
+        base: development
+        branch-suffix: random
