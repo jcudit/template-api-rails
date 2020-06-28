@@ -46,4 +46,5 @@ jobs:
         title: Scaffold Rails API App
         body: Auto-generated `rails new <app> --api`
         base: development
+        branch: auto-rails-new
         branch-suffix: random
