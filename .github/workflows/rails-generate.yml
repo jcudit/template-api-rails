@@ -1,0 +1,60 @@
+name: Rails Generate
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  ack:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.title, 'Generate Repository Content With `rails generate`')
+    steps:
+    - name: Debug Context
+      run: |
+        jq -rc '.' $GITHUB_EVENT_PATH
+    - name: Store required context in environment
+      run: |
+        echo ::set-env name=ISSUE_NUMBER::$(
+          jq -rc .issue.number $GITHUB_EVENT_PATH
+        )
+        echo ::set-env name=ACTION_HTML_URL::$(
+          echo https://github.com/${GITHUB_REPOSITORY}/actions
+        )
+        echo ::set-env name=ISSUE_ACTOR::$(printf ${GITHUB_ACTOR})
+    - name: Acknowledge chatop on calling Issue
+      uses: octokit/request-action@v1.1.0
+      with:
+        route: POST /repos/:owner/:repo/issues/${{ env.ISSUE_NUMBER }}/comments
+        body: |
+          👋 @${{ env.ISSUE_ACTOR }} - Starting Action.
+          Follow along on the [Actions tab](${{ env.ACTION_HTML_URL }}).
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  rails-generate:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.title, 'Generate Repository Content With `rails generate`')
+    steps:
+    - name: Checkout Branch To Make Edits
+      uses: actions/checkout@v2
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 2.6
+    - name: Install dependencies
+      run: bundle init && bundle add rails rspec-rails && sudo apt-get install -y libsqlite3-dev
+    - name: Rails Generate
+      run: rails generate ${{ github.event.issue.body }}
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v2.8.1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: Auto-generated `rails generate ...`
+        author-email: hubot@github.com
+        author-name: Hubot
+        branch: auto-rails-generate
+        branch-suffix: random
+        title: Scaffold Rails Resources
+        body: |
+          Closes ${{ github.event.issue.html_url }}
+          /cc @${{ env.GITHUB_ACTOR }}
