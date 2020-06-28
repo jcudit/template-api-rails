@@ -39,7 +39,7 @@ jobs:
   rails-new:
 
     runs-on: ubuntu-latest
-    # if: contains(github.event.issue.title, 'rails-new')
+    if: github.event.issue.title == "Initialize Repository With `rails new`"
     steps:
 
     - name: Checkout Branch To Make Edits
