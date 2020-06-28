@@ -45,9 +45,9 @@ jobs:
       with:
         ruby-version: 2.6
     - name: Install dependencies
-      run: bundle init && bundle add rails && sudo apt-get install -y libsqlite3-dev
+      run: bundle init && bundle add rails rspec-rails && sudo apt-get install -y libsqlite3-dev
     - name: Rails New
-      run: rails new . --skip-bundle --skip-bootsnap --force --api
+      run: rails new . --skip-bundle --force --api
     - name: Parse Issue Context From Environment
       run: |
         echo ::set-env name=ISSUE_HTML_URL::$(
