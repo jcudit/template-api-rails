@@ -32,6 +32,10 @@ jobs:
     - name: Rails New
       run: rails new myapp --api
 
+    - name: Debug Context
+      run: |
+        jq -rc '.' $GITHUB_EVENT_PATH
+
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v2.8.1
       with:
