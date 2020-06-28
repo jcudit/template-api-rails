@@ -7,6 +7,35 @@ on:
     types: [opened]
 
 jobs:
+
+  rails-new-ack:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Debug Context
+      run: |
+        jq -rc '.' $GITHUB_EVENT_PATH
+
+    - name: Store required context in environment
+      run: |
+        echo ::set-env name=ISSUE_NUMBER::$(
+          jq -rc .issue.number $GITHUB_EVENT_PATH
+        )
+        echo ::set-env name=ACTION_HTML_URL::$(
+          echo https://github.com/${GITHUB_REPOSITORY}/actions
+        )
+        echo ::set-env name=ISSUE_ACTOR::$(printf ${GITHUB_ACTOR})
+
+    - name: Acknowledge chatop on calling Issue
+      uses: octokit/request-action@v1.1.0
+      with:
+        route: POST /repos/:owner/:repo/issues/${{ env.ISSUE_NUMBER }}/comments
+        body: |
+          👋 @${{ env.ISSUE_ACTOR }} - Starting Action.
+          Follow along on the [Actions tab](${{ env.ACTION_HTML_URL }}).
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   rails-new:
 
     runs-on: ubuntu-latest
@@ -29,10 +58,6 @@ jobs:
 
     - name: Rails New
       run: rails new . --skip --api
-
-    - name: Debug Context
-      run: |
-        jq -rc '.' $GITHUB_EVENT_PATH
 
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v2.8.1
