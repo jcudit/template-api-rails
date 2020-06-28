@@ -1,23 +1,42 @@
-# This workflow will download a prebuilt Ruby version and install dependencies
-
 name: Rails New
 
 on:
-  push:
-    branches: [ development ]
-  pull_request:
-    branches: [ development ]
+  issues:
+    types: [opened]
 
 jobs:
-  rails-new:
-
+  rails-new-ack:
     runs-on: ubuntu-latest
-
+    if: contains(github.event.issue.title, 'Initialize Repository With `rails new`')
     steps:
+    - name: Debug Context
+      run: |
+        jq -rc '.' $GITHUB_EVENT_PATH
+    - name: Store required context in environment
+      run: |
+        echo ::set-env name=ISSUE_NUMBER::$(
+          jq -rc .issue.number $GITHUB_EVENT_PATH
+        )
+        echo ::set-env name=ACTION_HTML_URL::$(
+          echo https://github.com/${GITHUB_REPOSITORY}/actions
+        )
+        echo ::set-env name=ISSUE_ACTOR::$(printf ${GITHUB_ACTOR})
+    - name: Acknowledge chatop on calling Issue
+      uses: octokit/request-action@v1.1.0
+      with:
+        route: POST /repos/:owner/:repo/issues/${{ env.ISSUE_NUMBER }}/comments
+        body: |
+          👋 @${{ env.ISSUE_ACTOR }} - Starting Action.
+          Follow along on the [Actions tab](${{ env.ACTION_HTML_URL }}).
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  rails-new:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.title, 'Initialize Repository With `rails new`')
+    steps:
     - name: Checkout Branch To Make Edits
       uses: actions/checkout@v2
-
     - name: Set up Ruby
     # To automatically get bug fixes and new Ruby versions for ruby/setup-ruby,
     # change this to (see https://github.com/ruby/setup-ruby#versioning):
@@ -25,17 +44,16 @@ jobs:
       uses: ruby/setup-ruby@ec106b438a1ff6ff109590de34ddc62c540232e0
       with:
         ruby-version: 2.6
-
     - name: Install dependencies
       run: bundle init && bundle add rails && sudo apt-get install -y libsqlite3-dev
-
     - name: Rails New
       run: rails new . --skip --api
-
-    - name: Debug Context
+    - name: Parse Issue Context From Environment
       run: |
-        jq -rc '.' $GITHUB_EVENT_PATH
-
+        echo ::set-env name=ISSUE_HTML_URL::$(
+          jq -rc '.issue.html_url' $GITHUB_EVENT_PATH
+        )
+        echo ::set-env name=ISSUE_ACTOR::$(printf ${GITHUB_ACTOR})
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v2.8.1
       with:
@@ -43,8 +61,9 @@ jobs:
         commit-message: Auto-generated `rails new <app> --api`
         author-email: hubot@github.com
         author-name: Hubot
-        title: Scaffold Rails API App
-        body: Auto-generated `rails new <app> --api`
-        base: development
         branch: auto-rails-new
         branch-suffix: random
+        title: Scaffold Rails API App
+        body: |
+          Launched from ${{ env.ISSUE_HTML_URL }}
+          /cc @${{ env.ISSUE_ACTOR }}
