@@ -30,7 +30,7 @@ jobs:
       run: bundle init && bundle add rails && sudo apt-get install -y libsqlite3-dev
 
     - name: Rails New
-      run: rails new myapp --api
+      run: rails new . --skip --api
 
     - name: Debug Context
       run: |
