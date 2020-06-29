@@ -6,7 +6,7 @@ on:
 
 jobs:
 
-  acceptance-tests:
+  unit-tests:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Repository

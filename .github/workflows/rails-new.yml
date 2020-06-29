@@ -5,29 +5,21 @@ on:
     types: [opened]
 
 jobs:
-  rails-new-ack:
+  ack:
     runs-on: ubuntu-latest
     if: contains(github.event.issue.title, 'Initialize Repository With `rails new`')
     steps:
-    - name: Debug Context
+    - name: Parse Event For Environment Variables
       run: |
-        jq -rc '.' $GITHUB_EVENT_PATH
-    - name: Store required context in environment
-      run: |
-        echo ::set-env name=ISSUE_NUMBER::$(
-          jq -rc .issue.number $GITHUB_EVENT_PATH
-        )
-        echo ::set-env name=ACTION_HTML_URL::$(
-          echo https://github.com/${GITHUB_REPOSITORY}/actions
-        )
-        echo ::set-env name=ISSUE_ACTOR::$(printf ${GITHUB_ACTOR})
+        echo ::set-env name=GITHUB_ACTOR::$(printf ${GITHUB_ACTOR})
+        echo ::set-env name=GITHUB_REPOSITORY::$(printf ${GITHUB_REPOSITORY})
     - name: Acknowledge chatop on calling Issue
       uses: octokit/request-action@v1.1.0
       with:
-        route: POST /repos/:owner/:repo/issues/${{ env.ISSUE_NUMBER }}/comments
+        route: POST /repos/:owner/:repo/issues/${{ github.event.issue.number }}/comments
         body: |
-          👋 @${{ env.ISSUE_ACTOR }} - Starting Action.
-          Follow along on the [Actions tab](${{ env.ACTION_HTML_URL }}).
+          👋 @${{ env.GITHUB_ACTOR }} - Starting Action.
+          Follow along on the [Actions tab](https://github.com/${{ env.GITHUB_REPOSITORY }}/actions).
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -35,25 +27,19 @@ jobs:
     runs-on: ubuntu-latest
     if: contains(github.event.issue.title, 'Initialize Repository With `rails new`')
     steps:
+    - name: Parse Event For Environment Variables
+      run: |
+        echo ::set-env name=GITHUB_ACTOR::$(printf ${GITHUB_ACTOR})
     - name: Checkout Branch To Make Edits
       uses: actions/checkout@v2
     - name: Set up Ruby
-    # To automatically get bug fixes and new Ruby versions for ruby/setup-ruby,
-    # change this to (see https://github.com/ruby/setup-ruby#versioning):
-    # uses: ruby/setup-ruby@v1
-      uses: ruby/setup-ruby@ec106b438a1ff6ff109590de34ddc62c540232e0
+      uses: ruby/setup-ruby@v1
       with:
         ruby-version: 2.6
-    - name: Install dependencies
-      run: bundle init && bundle add rails rspec-rails && sudo apt-get install -y libsqlite3-dev
+    - name: Install Dependencies
+      run: sudo apt-get install -y libsqlite3-dev && bundle init && bundle add rails
     - name: Rails New
       run: rails new . --skip-bundle --force --api
-    - name: Parse Issue Context From Environment
-      run: |
-        echo ::set-env name=ISSUE_HTML_URL::$(
-          jq -rc '.issue.html_url' $GITHUB_EVENT_PATH
-        )
-        echo ::set-env name=ISSUE_ACTOR::$(printf ${GITHUB_ACTOR})
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v2.8.1
       with:
@@ -65,5 +51,5 @@ jobs:
         branch-suffix: random
         title: Scaffold Rails API App
         body: |
-          Launched from ${{ env.ISSUE_HTML_URL }}
-          /cc @${{ env.ISSUE_ACTOR }}
+          Closes ${{ github.event.issue.html_url }}
+          /cc @${{ env.GITHUB_ACTOR }}

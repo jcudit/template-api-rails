@@ -9,25 +9,17 @@ jobs:
     runs-on: ubuntu-latest
     if: contains(github.event.issue.title, 'Generate Repository Content With `rails generate`')
     steps:
-    - name: Debug Context
+    - name: Parse Event For Environment Variables
       run: |
-        jq -rc '.' $GITHUB_EVENT_PATH
-    - name: Store required context in environment
-      run: |
-        echo ::set-env name=ISSUE_NUMBER::$(
-          jq -rc .issue.number $GITHUB_EVENT_PATH
-        )
-        echo ::set-env name=ACTION_HTML_URL::$(
-          echo https://github.com/${GITHUB_REPOSITORY}/actions
-        )
-        echo ::set-env name=ISSUE_ACTOR::$(printf ${GITHUB_ACTOR})
+        echo ::set-env name=GITHUB_ACTOR::$(printf ${GITHUB_ACTOR})
+        echo ::set-env name=GITHUB_REPOSITORY::$(printf ${GITHUB_REPOSITORY})
     - name: Acknowledge chatop on calling Issue
       uses: octokit/request-action@v1.1.0
       with:
-        route: POST /repos/:owner/:repo/issues/${{ env.ISSUE_NUMBER }}/comments
+        route: POST /repos/:owner/:repo/issues/${{ github.event.issue.number }}/comments
         body: |
-          👋 @${{ env.ISSUE_ACTOR }} - Starting Action.
-          Follow along on the [Actions tab](${{ env.ACTION_HTML_URL }}).
+          👋 @${{ env.GITHUB_ACTOR }} - Starting Action.
+          Follow along on the [Actions tab](https://github.com/${{ env.GITHUB_REPOSITORY }}/actions).
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -35,6 +27,9 @@ jobs:
     runs-on: ubuntu-latest
     if: contains(github.event.issue.title, 'Generate Repository Content With `rails generate`')
     steps:
+    - name: Parse Event For Environment Variables
+      run: |
+        echo ::set-env name=GITHUB_ACTOR::$(printf ${GITHUB_ACTOR})
     - name: Checkout Branch To Make Edits
       uses: actions/checkout@v2
     - name: Set up Ruby
